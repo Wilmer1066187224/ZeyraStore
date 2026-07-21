@@ -17,7 +17,7 @@ const totalItems = computed(() =>
 
 <template>
   <transition name="fade">
-    <div v-if="open" class="fixed inset-0 z-50 flex">
+<div v-if="open" class="fixed inset-0 z-[99999] flex bg-transparent">
       
       <!-- Fondo oscuro -->
       <div
@@ -70,17 +70,18 @@ const totalItems = computed(() =>
   <div>
     <p class="font-semibold">{{ item.nombre }}</p>
 
-    <p class="text-sm text-gray-600">
-      ${{ item.precio.toLocaleString('es-CO') }}
-    </p>
+   <p class="text-sm text-gray-600">
+  ${{ Number(item.precio_venta).toLocaleString('es-CO') }}
+</p>
 
     <!-- Controles cantidad -->
     <div class="flex items-center gap-3 mt-3">
       <button
-        @click="cart.decrease(item.id, item.talla)"
+        @click="cart.decrease(item.id)"
         class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition"
-      >
         
+        >
+        -
       </button>
 
       <span class="font-medium">
@@ -88,7 +89,7 @@ const totalItems = computed(() =>
       </span>
 
       <button
-        @click="cart.increase(item.id, item.talla)"
+        @click="cart.increase(item.id)"
         class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition"
       >
         +
@@ -97,7 +98,7 @@ const totalItems = computed(() =>
   </div>
 
   <button
-  @click="cart.removeFromCart(item.id, item.talla)"
+  @click="cart.removeFromCart(item.id)"
   class="border border-gray-300
          text-gray-700
          px-4 py-2 rounded-full

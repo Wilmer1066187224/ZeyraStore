@@ -1,13 +1,20 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useCartStore } from '@/stores/cart'
+import axios from 'axios'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 
+
+const auth = useAuthStore()
+const router = useRouter()
 const cart = useCartStore()
 
 const envio = ref({
   nombre: '',
   apellido: '',
   email: '',
+  documento: '',
   direccion: '',
   ciudad: '',
   telefono: ''
@@ -25,21 +32,103 @@ const total = computed(() =>
   subtotal.value + envioCosto.value
 )
 
-const finalizarCompra = () => {
-  if (
-    !envio.value.nombre ||
-    !envio.value.email ||
-    !envio.value.direccion
-  ) {
-    alert('Completa los datos requeridos')
-    return
+// Cargar automáticamente los datos del cliente
+onMounted(() => {
+
+  console.log(auth.user)
+
+  if (auth.user) {
+
+envio.value.nombre = auth.user.nombre
+envio.value.apellido = auth.user.apellido
+envio.value.email = auth.user.correo
+envio.value.documento = auth.user.documento
+envio.value.telefono = auth.user.telefono
+envio.value.direccion = auth.user.direccion
+envio.value.ciudad = auth.user.ciudad
+
   }
 
-  alert('Compra realizada con éxito 🎉')
+})
 
-  cart.items = []
-  cart.saveCart()
+
+
+
+const finalizarCompra = async () => {
+
+    if (!auth.isAuthenticated) {
+        alert('Debes iniciar sesión para finalizar tu compra.')
+        router.push('/login')
+        return
+    }
+
+    if (
+        !envio.value.nombre ||
+        !envio.value.email ||
+        !envio.value.documento ||
+        !envio.value.telefono ||
+        !envio.value.ciudad
+    ) {
+        alert('Completa los datos requeridos')
+        return
+    }
+
+    // Mostrar el carrito
+    console.log("CARRITO:")
+    console.table(cart.items)
+
+    const productos = cart.items.map(item => ({
+        producto_id: Number(item.id),
+        cantidad: Number(item.cantidad)
+    }))
+
+    const ventaData = {
+        nombre: envio.value.nombre,
+        apellido: envio.value.apellido,
+        email: envio.value.email,
+        documento: envio.value.documento,
+        telefono: envio.value.telefono,
+        ciudad: envio.value.ciudad,
+        metodo_pago: metodoPago.value,
+        productos: productos
+    }
+
+
+    try {
+
+        const response = await axios.post(
+            'http://127.0.0.1:8000/api/ventas',
+            ventaData
+        )
+
+        console.log(response.data)
+
+        cart.items = []
+        cart.saveCart()
+
+        router.push('/pedido-exitoso/' + response.data.venta.id)
+
+    } catch (error) {
+
+        console.log(error)
+
+        if (error.response) {
+
+            console.log(error.response.data)
+
+            alert(JSON.stringify(error.response.data))
+
+        } else {
+
+            alert(error.message)
+
+        }
+
+    }
+
 }
+
+
 </script>
 
 <template>
@@ -185,6 +274,29 @@ const finalizarCompra = () => {
                      focus:border-[#111]
                      focus:bg-white"
             />
+   <div>
+
+  <label
+    class="block text-sm font-semibold
+           text-gray-700 mb-2"
+  >
+    Cédula de ciudadanía
+  </label>
+
+  <input
+    v-model="envio.documento"
+    type="text"
+    placeholder="Ej: 1065000001"
+    class="w-full h-14 px-5
+           rounded-2xl
+           bg-[#f9fafb]
+           border border-gray-200
+           outline-none transition
+           focus:border-[#111]
+           focus:bg-white"
+  />
+
+</div>
 
           </div>
 
@@ -241,7 +353,7 @@ const finalizarCompra = () => {
 
           </div>
 
-          <!-- ADDRESS -->
+          <!-- 
           <div>
 
             <label
@@ -265,7 +377,7 @@ const finalizarCompra = () => {
             />
 
           </div>
-
+             ADDRESS -->
           <!-- ROW -->
           <div class="grid md:grid-cols-2 gap-5">
 
@@ -533,7 +645,7 @@ const finalizarCompra = () => {
                 <p
                   class="font-black text-lg mt-3"
                 >
-                  ${{ (item.precio * item.cantidad).toLocaleString('es-CO') }}
+                  ${{ (item.precio_venta * item.cantidad).toLocaleString('es-CO') }}
                 </p>
 
               </div>

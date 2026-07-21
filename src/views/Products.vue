@@ -1,56 +1,45 @@
 <script setup>
+import axios from 'axios'
+import { ref, onMounted } from 'vue'
 import { useCartStore } from '@/stores/cart'
 
 const cart = useCartStore()
 
-const productos = [
-  {
-    id: 1,
-    nombre: "Camiseta urbana",
-    precio: 75000,
-    imagen: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=1200&auto=format&fit=crop",
-    categoria: "Streetwear",
-    tallas: ["S", "M", "L"]
-  },
-  {
-    id: 2,
-    nombre: "Jeans slim fit",
-    precio: 140000,
-    imagen: "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?q=80&w=1200&auto=format&fit=crop",
-    categoria: "Denim",
-    tallas: ["30", "32", "34"]
-  },
-  {
-    id: 3,
-    nombre: "Chaqueta casual",
-    precio: 220000,
-    imagen: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?q=80&w=1200&auto=format&fit=crop",
-    categoria: "Premium",
-    tallas: ["S", "M", "L"]
-  },
-  {
-    id: 4,
-    nombre: "Sneakers Urban",
-    precio: 280000,
-    imagen: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=1200&auto=format&fit=crop",
-    categoria: "Sneakers",
-    tallas: ["39", "40", "41"]
-  },
-]
+const productos = ref([])
 
-const addProduct = (producto) => {
-  if (!producto.tallaSeleccionada) {
-    alert("Selecciona una talla")
-    return
+onMounted(async () => {
+
+  try {
+
+    const response = await axios.get(
+      'http://127.0.0.1:8000/api/productos'
+    )
+
+    console.log('Productos:', response.data)
+
+    productos.value = response.data
+
+  } catch (error) {
+
+    console.error('Error cargando productos:', error)
+
   }
 
-  cart.addToCart({
-    ...producto,
-    talla: producto.tallaSeleccionada
-  })
+})
+
+const addProduct = (producto) => {
+
+    console.log("====== PRODUCTO AGREGADO ======");
+    console.log(producto);
+    console.log("ID:", producto.id);
+
+    cart.addToCart({
+        ...producto,
+        cantidad: 1
+    });
+
 }
 </script>
-
 <template>
   <div class="bg-[#f5f5f5] min-h-screen">
 
@@ -161,12 +150,10 @@ const addProduct = (producto) => {
           <!-- IMAGE -->
           <div class="relative overflow-hidden">
 
-            <img
-              :src="producto.imagen"
-              class="h-80 w-full object-cover
-                     group-hover:scale-110
-                     transition duration-700"
-            />
+   <img
+  :src="producto.imagen"
+  class="h-80 w-full object-cover"
+/>
 
             <!-- BADGE -->
             <div
@@ -187,7 +174,7 @@ const addProduct = (producto) => {
             >
 
               <!-- TALLAS -->
-              <div class="flex gap-2 mb-4">
+              <!-- <div class="flex gap-2 mb-4">
 
                 <button
                   v-for="talla in producto.tallas"
@@ -203,7 +190,7 @@ const addProduct = (producto) => {
                   {{ talla }}
                 </button>
 
-              </div>
+              </div> -->
 
               <!-- BTN -->
               <button
@@ -237,7 +224,7 @@ const addProduct = (producto) => {
             <div class="mt-6 flex justify-between items-center">
 
               <span class="text-3xl font-black text-black">
-                ${{ producto.precio.toLocaleString('es-CO') }}
+                ${{ Number(producto.precio_venta).toLocaleString('es-CO') }}
               </span>
 
               <div

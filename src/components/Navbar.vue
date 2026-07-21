@@ -1,9 +1,15 @@
 <script setup>
 import { ref } from 'vue'
+import { useAuthStore } from '@/stores/auth'
 import { useCartStore } from '@/stores/cart'
 import CartDrawer from './CartDrawer.vue'
 
 const cart = useCartStore()
+const auth = useAuthStore()
+
+const logout = () => {
+    auth.logout()
+}
 
 const open = ref(false)
 
@@ -79,13 +85,38 @@ const showAccesorios = ref(false)
         <!-- ACTIONS -->
         <div class="flex items-center gap-6">
 
-          <router-link
-            to="/login"
-            class="hidden md:block text-sm font-semibold hover:text-fuchsia-600 transition"
-          >
-            Entrar
-          </router-link>
+      <div class="hidden md:flex items-center gap-4">
 
+        <!---------------------->
+
+    <router-link
+        v-if="!auth.isAuthenticated"
+        to="/login"
+        class="text-sm font-semibold hover:text-fuchsia-600 transition"
+    >
+        Entrar
+    </router-link>
+
+    <template v-else>
+
+        <span class="font-semibold text-gray-700">
+            Hola, {{ auth.user.nombre }}
+        </span>
+
+        <button
+            @click="logout"
+            class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm transition"
+        >
+            Salir
+        </button>
+
+    </template>
+
+</div>
+
+        <!---------------------->
+
+        
           <router-link
             to="/favoritos"
             class="text-xl hover:scale-110 transition"
